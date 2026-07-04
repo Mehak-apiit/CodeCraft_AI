@@ -81,7 +81,7 @@ export function expressServer(app: Express, PORT: number){
     app.get(
         "/auth/github/callback",
         passport.authenticate("github", { failureRedirect: "/auth/login",
-            successRedirect: "process.env.FRONT_APP_URL",
+            successRedirect: process.env.FRONT_APP_URL || "/",
          })
     )
     app.listen(PORT,()=>{

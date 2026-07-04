@@ -24,10 +24,9 @@ export class UserService{
             const user  = new User({
                 name,
                 image,
-                access_token,
-                refresh_token,
+                accessToken: access_token,
+                refreshToken: refresh_token,
                 githubId:id,
-                
             });
             const newUser = await user.save();
             return {
@@ -37,8 +36,8 @@ export class UserService{
             const updatedUser = await User.findByIdAndUpdate(
                 existingUser._id,
                 {
-                    access_token,
-                    refresh_token,
+                    accessToken: access_token,
+                    refreshToken: refresh_token,
                     name,
                     image,
                 },

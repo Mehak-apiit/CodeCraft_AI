@@ -162,11 +162,10 @@ export const gitStatusTool = tool(
 
 export const gitTools = [gitDiffTool, gitLogTool, gitStatusTool];
 
-//TEST
-
-async function main() {
-  const res = await gitStatusTool.invoke({});
-  console.log("res === ", res);
+if (require.main === module) {
+  async function main() {
+    const res = await gitStatusTool.invoke({});
+    console.log("res === ", res);
+  }
+  main();
 }
-
-main();

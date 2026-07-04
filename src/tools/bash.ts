@@ -155,16 +155,13 @@ export const bashTool = tool(
     }
 );
 
-/**
- * TEST RUN
- */
-async function main() {
-    const res = await bashTool.invoke({
-        command: "mkdir Mehak",
-        timeout: 60,
-    });
-
-    console.log("\n📌 RESULT:\n", res);
+if (require.main === module) {
+    async function main() {
+        const res = await bashTool.invoke({
+            command: "mkdir test",
+            timeout: 60,
+        });
+        console.log("\nRESULT:\n", res);
+    }
+    main();
 }
-
-main();

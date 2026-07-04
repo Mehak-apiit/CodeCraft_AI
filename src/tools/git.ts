@@ -1,0 +1,172 @@
+import { tool } from "@langchain/core/tools";
+import { z } from "zod";
+import simpleGit from "simple-git";
+import path from "path";
+
+const GIT_REPO = "human-in-loop";
+const WORKING_DIR = path.resolve(
+  process.cwd(),
+  "public/working-dir/",
+  GIT_REPO
+);
+
+function getGit() {
+  return simpleGit(WORKING_DIR);
+}
+
+async function assertGitRepo(git: any) {
+  const isRepo = await git.checkIsRepo().catch(() => false);
+  if (!isRepo) {
+    throw new Error("Not a git repository. Run `git init` first.");
+  }
+}
+
+//GIT DIFF TOOL
+
+export const gitDiffTool = tool(
+  async ({ target, staged, file_path }) => {
+    try {
+      const git = getGit();
+      await assertGitRepo(git);
+
+      const args: string[] = [];
+
+      if (staged) {
+        args.push("--staged");
+      } else if (target) {
+        args.push(target);
+      } else {
+        args.push("HEAD");
+      }
+
+      if (file_path) {
+        args.push("--", file_path);
+      }
+
+      const diff = await git.diff(args);
+
+      if (!diff || !diff.trim()) return "No changes detected";
+
+      return `\`\`\`diff\n${diff}\n\`\`\``;
+    } catch (err: any) {
+      return `Git diff error: ${err.message}`;
+    }
+  },
+  {
+    name: "git_diff",
+    description:
+      "Show git diff for the project. Can show staged changes, compare commits/branches, or diff a specific file.",
+    schema: z.object({
+      target: z.string().optional().describe("Commit or branch to diff against"),
+      staged: z.boolean().optional().describe("Show only staged changes"),
+      file_path: z
+        .string()
+        .optional()
+        .describe("Limit diff to a specific file path"),
+    }),
+  }
+);
+
+//GIT LOG TOOL 
+
+export const gitLogTool = tool(
+  async ({ limit, author, since }) => {
+    try {
+      const git = getGit();
+      await assertGitRepo(git);
+
+      const options: any = {
+        maxCount: limit ?? 10,
+      };
+
+      if (author) options.author = author;
+      if (since) options.since = since;
+
+      const log = await git.log(options);
+
+      if (!log.all.length) return "No commits found";
+
+      const lines = log.all.map((c) => {
+        return `${c.hash.slice(0, 7)} | ${c.date.slice(
+          0,
+          10
+        )} | ${c.author_name.padEnd(20)} | ${c.message}`;
+      });
+
+      return `Recent commits (${log.all.length}):\n\n${lines.join("\n")}`;
+    } catch (err: any) {
+      return `Git log error: ${err.message}`;
+    }
+  },
+  {
+    name: "git_log",
+    description:
+      "Show recent git commit history with hash, date, author, and message.",
+    schema: z.object({
+      limit: z.number().optional().describe("Number of commits to show (default 10)"),
+      author: z.string().optional().describe("Filter by author name or email"),
+      since: z
+        .string()
+        .optional()
+        .describe("Show commits since date (e.g. '2024-01-01')"),
+    }),
+  }
+);
+
+//GIT STATUS TOOL
+
+export const gitStatusTool = tool(
+  async () => {
+    try {
+      const git = getGit();
+      await assertGitRepo(git);
+
+      const status = await git.status();
+
+      const lines: string[] = [];
+
+      if (status.staged.length) {
+        lines.push(`Staged: ${status.staged.join(", ")}`);
+      }
+
+      if (status.modified.length) {
+        lines.push(`Modified: ${status.modified.join(", ")}`);
+      }
+
+      if (status.not_added.length) {
+        lines.push(`Untracked: ${status.not_added.join(", ")}`);
+      }
+
+      if (status.conflicted.length) {
+        lines.push(`Conflicts: ${status.conflicted.join(", ")}`);
+      }
+
+      if (!lines.length) {
+        return "Working tree clean - nothing to commit";
+      }
+
+      return `Branch: ${status.current}\n\n${lines.join("\n")}`;
+    } catch (err: any) {
+      return `Git Status error: ${err.message}`;
+    }
+  },
+  {
+    name: "git_status",
+    description:
+      "Show current git status: staged, modified, untracked, and conflicted files.",
+    schema: z.object({}),
+  }
+);
+
+
+
+export const gitTools = [gitDiffTool, gitLogTool, gitStatusTool];
+
+//TEST
+
+async function main() {
+  const res = await gitStatusTool.invoke({});
+  console.log("res === ", res);
+}
+
+main();

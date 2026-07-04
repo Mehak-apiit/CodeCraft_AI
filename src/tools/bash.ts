@@ -7,16 +7,20 @@ import fs from "fs";
 
 const execAsync = promisify(exec);
 
-const WORKING_DIR = path.resolve(process.cwd(), "public/working-dir");
-
+/**
+ * ✅ FIX: Always use a stable project sandbox folder
+ * (NOT just public/working-dir confusion)
+ */
+const WORKING_DIR = path.resolve(process.cwd(), "sandbox");
 
 const MAX_OUTPUT_CHARS = 8000;
-
-const CORE_FACTS = ['personal.name', 'personal.location'];
 
 const isWindows = process.platform === "win32";
 const SHELL = isWindows ? "cmd.exe" : "/bin/bash";
 
+/**
+ * Dangerous commands blocked
+ */
 const BLOCKED_PATTERNS = [
     /rm\s+-rf\s+\/(?!\w)/,
     />\s*\/dev\//,
@@ -29,16 +33,16 @@ const BLOCKED_PATTERNS = [
     /wget\s+.*\|\s*(?:bash|sh|zsh)/,
     /\beval\b/,
     /base64\s+.*\|\s*(?:bash|sh)/,
-    /(?:^|[;&|])\s*\?(?:etc|home|root|usr|var|sys|proc)\b/,
 ];
 
+/**
+ * Commands that may hang
+ */
 const INTERACTIVE_PATTERNS = [
-    /\brd\s+\/s(?!\s+\/q)/i,
     /\bnpm\s+init\b(?!.*-y)/i,
     /\bapt(?:-get)?\s+install\b(?!.*-y)/i,
     /\bgit\s+commit\b(?!.*-m)/i,
     /\b(?:nano|vim?|vi|emacs|less|more)\b/i,
-    /\b(?:python3?|node)\b(?!\s+\S+\.)/i,
     /\bssh\b/i,
 ];
 
@@ -46,10 +50,14 @@ async function ensureWorkingDir() {
     await fs.promises.mkdir(WORKING_DIR, { recursive: true });
 }
 
+/**
+ * Fix Windows/Linux interactive commands
+ */
 function normalizeCommand(command: string): string {
     if (isWindows) {
-        if (/^rd\s+\/s\s+/i.test(command) && !/\/q/i.test(command))
+        if (/^rd\s+\/s\s+/i.test(command) && !/\/q/i.test(command)) {
             return command.replace(/rd\s+\/s/i, "rd /s /q");
+        }
     } else {
         if (/npm\s+init(?!.*-y)/.test(command)) return command + " -y";
         if (/apt(?:-get)?\s+install(?!.*-y)/.test(command))
@@ -58,7 +66,9 @@ function normalizeCommand(command: string): string {
     return command;
 }
 
-
+/**
+ * Prevent huge output crashes
+ */
 function truncateOutput(output: string): string {
     if (output.length <= MAX_OUTPUT_CHARS) return output;
 
@@ -71,22 +81,32 @@ function truncateOutput(output: string): string {
     );
 }
 
+/**
+ * MAIN TOOL
+ */
 export const bashTool = tool(
     async ({ command, timeout }) => {
         await ensureWorkingDir();
 
+        console.log("📁 Running in:", WORKING_DIR);
+        console.log("⚡ Command:", command);
+
+        // ❌ Block dangerous commands
         for (const pattern of BLOCKED_PATTERNS) {
-            if (pattern.test(command))
-                return `Blocked dangerous command: "${command}"`;
+            if (pattern.test(command)) {
+                return `❌ Blocked dangerous command: "${command}"`;
+            }
         }
 
+        // ⚠️ Handle interactive commands
         for (const pattern of INTERACTIVE_PATTERNS) {
             if (pattern.test(command)) {
                 const fixed = normalizeCommand(command);
+
                 if (fixed !== command) {
                     command = fixed;
                 } else {
-                    return `Interactive command detected (may hang): "${command}". Add non-interactive flags.`;
+                    return `⚠️ Interactive command detected (may hang): "${command}"`;
                 }
             }
         }
@@ -101,48 +121,50 @@ export const bashTool = tool(
 
             const out: string[] = [];
 
-            if (stdout?.trim())
+            if (stdout?.trim()) {
                 out.push(`STDOUT:\n${truncateOutput(stdout.trim())}`);
+            }
 
-            if (stderr?.trim())
-                out.push(`STDERR (may be normal verbose output):\n${truncateOutput(stderr.trim())}`);
+            if (stderr?.trim()) {
+                out.push(`STDERR:\n${truncateOutput(stderr.trim())}`);
+            }
 
-            return out.length ? out.join("\n\n") : "Command completed";
+            return out.length ? out.join("\n\n") : "Command completed successfully";
         } catch (err: any) {
-            if (err.killed || err.signal === "SIGTERM")
-                return `Command timed out: "${command}"`;
+            const msg: string[] = [err.message];
 
-            const sanitized = err.message.replace(
-                new RegExp(WORKING_DIR.replace(/[/\\]/g, "[/\\\\]"), "g"),
-                "[WORKING_DIR]"
-            );
-
-            const msg: string[] = [sanitized];
-
-            if (err.stdout)
+            if (err.stdout) {
                 msg.push(`STDOUT:\n${truncateOutput(err.stdout)}`);
+            }
 
-            
-            if (err.stderr)
+            if (err.stderr) {
                 msg.push(`STDERR:\n${truncateOutput(err.stderr)}`);
+            }
 
-            return `Command failed:\n${msg.join("\n")}`;
+            return `❌ Command failed:\n${msg.join("\n")}`;
         }
     },
     {
         name: "bash",
         description:
-            "Cross-platform shell tool (Windows/Linux). Runs in a sandboxed working directory. Auto-fixes common interactive commands. Use for npm, git, builds. Interactive commands are blocked.",
+            "Safe cross-platform shell tool running inside sandbox directory. Used for npm, git, build commands.",
         schema: z.object({
-            command: z.string().min(1).max(2000).describe("Shell command to execute"),
-            timeout: z.number().min(5).max(120).optional().describe("Timeout in seconds (default: 20)"),
+            command: z.string().min(1).max(2000),
+            timeout: z.number().min(5).max(120).optional(),
         }),
     }
 );
 
+/**
+ * TEST RUN
+ */
 async function main() {
-    const res = await bashTool.invoke({ command: "mkdir js-project", timeout: 60 });
-    console.log("res:", res);
+    const res = await bashTool.invoke({
+        command: "mkdir Mehak",
+        timeout: 60,
+    });
+
+    console.log("\n📌 RESULT:\n", res);
 }
 
 main();

@@ -6,13 +6,14 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "nodemon --exec ts-node src/index.ts",
-    "file": "ts-node src/tools/git.ts"
+    "file": "ts-node src/tools/ast.ts"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
+    "@babel/parser": "^8.0.0",
     "@langchain/core": "^1.2.1",
     "@langchain/langgraph": "^1.4.7",
     "connect-mongo": "^6.0.0",

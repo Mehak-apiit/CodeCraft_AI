@@ -1,0 +1,20 @@
+{
+  "graph": {
+    "sample.ts": {
+      "imports": [],
+      "importedBy": [],
+      "unresolvedImports": [
+        "express"
+      ]
+    }
+  },
+  "summary": {
+    "totalFiles": 1,
+    "entryPoints": [],
+    "isolated": [
+      "sample.ts"
+    ],
+    "mostImported": []
+  },
+  "builtAt": "2026-07-08T14:59:34.346Z"
+}

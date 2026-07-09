@@ -1,0 +1,11 @@
+[
+  {
+    "id": "2e847915-fa9f-4c44-99f2-7afc745a178d",
+    "task": "Build RAG",
+    "assigned_to": "engineer",
+    "status": "pending",
+    "dependencies": [],
+    "created_at": "2026-07-08T14:59:34.371Z",
+    "updated_at": "2026-07-08T14:59:34.371Z"
+  }
+]

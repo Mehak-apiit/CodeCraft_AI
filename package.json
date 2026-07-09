@@ -6,6 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "nodemon --exec ts-node src/index.ts",
+    "agent": "ts-node src/agent.ts",
     "file": "ts-node src/tools/ast.ts"
   },
   "keywords": [],
@@ -14,8 +15,10 @@
   "type": "commonjs",
   "dependencies": {
     "@babel/parser": "^8.0.0",
+    "@langchain/cohere": "^1.1.0",
     "@langchain/core": "^1.2.1",
     "@langchain/langgraph": "^1.4.7",
+    "@langchain/pinecone": "^1.0.3",
     "connect-mongo": "^6.0.0",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
@@ -25,13 +28,15 @@
     "langchain": "^1.5.2",
     "passport": "^0.7.0",
     "passport-github2": "^0.1.12",
-    "simple-git": "^3.36.0"
+    "simple-git": "^3.36.0",
+    "uuid": "^14.0.1"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",
     "@types/express-session": "^1.19.0",
     "@types/passport": "^1.0.17",
     "@types/passport-github2": "^1.2.9",
+    "@types/uuid": "^10.0.0",
     "nodemon": "^3.1.14",
     "ts-node": "^10.9.2",
     "typescript": "^6.0.3"

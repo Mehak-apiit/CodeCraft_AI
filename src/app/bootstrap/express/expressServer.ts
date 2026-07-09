@@ -19,15 +19,17 @@ export function expressServer(app: Express, PORT: number){
     app.get('/', async (req: Request, res: Response) => {
         res.json({message: "Server is up"});
     })
-    const sess = {
-        store: MongoStore.create({
-            mongoUrl: process.env.DB_URL,
-            collectionName: 'sessions',
-        }),
+    const sess: session.SessionOptions = {
         secret: process.env.COOKIE_KEY as string,
         resave: false,
         saveUninitialized: false,
         cookie: {secure:false}
+    }
+    if (process.env.DB_URL && process.env.USE_MONGO_SESSION === 'true') {
+        sess.store = MongoStore.create({
+            mongoUrl: process.env.DB_URL,
+            collectionName: 'sessions',
+        });
     }
     if(process.env.NODE_ENV === 'production'){
         app.set('trust proxy', 1);

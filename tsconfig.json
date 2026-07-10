@@ -1,26 +1,19 @@
 {
   "compilerOptions": {
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
-
+    "module": "commonjs",
+    "moduleResolution": "node",
     "target": "ES2020",
-
     "esModuleInterop": true,
     "strict": true,
-
     "outDir": "dist",
     "rootDir": "src",
-
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"]
     },
-
     "types": ["node"],
-
     "sourceMap": true,
     "skipLibCheck": true,
-
     "ignoreDeprecations": "6.0"
   },
   "include": ["src"],

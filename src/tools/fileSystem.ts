@@ -2,7 +2,6 @@ import { tool } from "@langchain/core/tools";
 import { z } from "zod";
 import fs from "fs/promises";
 import path from "path";
-import { glob } from "glob";
 
 export const WORKING_DIR = path.resolve(process.cwd(), "public/agent-working-dir");
 
@@ -166,6 +165,7 @@ export const listDirTool = tool(
 export const searchFileTool = tool(
     async ({ query, file_pattern, case_sensitive }) => {
         try {
+            const { glob } = await import("glob");
             const files = await glob(file_pattern || "**/*.{js,ts,jsx,tsx}", {
                 cwd: WORKING_DIR,
                 ignore: ["**/node_modules/**", "**/.git/**", "**/dist/**", "**/build/**"],

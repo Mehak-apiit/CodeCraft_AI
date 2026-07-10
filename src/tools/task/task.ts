@@ -3,14 +3,14 @@ import { z } from "zod";
 import { HumanMessage } from "@langchain/core/messages";
 import { getTaskToolDescription, DEFAULT_SUBAGENT_PROMPT } from "./taskToolPrompt";
 
-export const createTool = (model: any, config: any = {}) => {
+export const createTaskTool = (model: any, config: any = {}) => {
     return tool(
         async ({ sub_agent, task }: { sub_agent: string; task: string }, toolConfig: any) => {
             if (!task || !sub_agent) {
                 return "Please provide sub_agent name and task that will be executed";
             }
 
-            const { createReactAgent } = await import("@langchain/langgraph/prebuilt");
+            const { createReactAgent } = require("@langchain/langgraph/dist/prebuilt");
             const subagent = createReactAgent({
                 llm: model,
                 tools: [...(config.tools || [])],

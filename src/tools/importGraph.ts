@@ -3,7 +3,6 @@ import { z } from "zod";
 import { parse } from "@babel/parser";
 import fs from "fs/promises";
 import path from "path";
-import { glob } from "glob";
 import { WORKING_DIR } from "./fileSystem";
 
 /**
@@ -213,6 +212,7 @@ mostImported: central.slice(0, 5),
 
   const pattern = file_pattern ?? "**/*.{js,ts,jsx,tsx}";
 
+  const { glob } = await import("glob");
   const files = await glob(pattern, {
   cwd: base,
   ignore: [

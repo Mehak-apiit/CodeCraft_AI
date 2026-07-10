@@ -4,7 +4,7 @@ import { z } from "zod";
 Strategic reflection tool for research planning
  */
 
-export const think_tool = tool(
+export const thinkTool = tool(
     async({reflection}) =>{
         return `<think>${reflection}</think>`;
 

@@ -1,7 +1,7 @@
 import 'dotenv/config';
 import { ChatCohere } from '@langchain/cohere';
 import { MemorySaver } from '@langchain/langgraph-checkpoint';
-import { createReactAgent } from '@langchain/langgraph/prebuilt';
+import { createReactAgent } from '@langchain/langgraph/dist/prebuilt';
 import { BaseMessage } from '@langchain/core/messages';
 
 import { bashTool } from './tools/bash';

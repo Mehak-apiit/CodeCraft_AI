@@ -1,5 +1,5 @@
 import path from "node:path";
-import { createReactAgent } from "@langchain/langgraph/dist/prebuilt";
+import { createAgent } from "langchain";
 import { HumanMessage } from "@langchain/core/messages";
 import { memoryStore } from "./memo/memoryStore";
 import { ContextBuilder } from "./memo/contextBuilder";
@@ -26,10 +26,10 @@ export async function createMemoryAgent({
     await memo.init();
     const contextBuilder = new ContextBuilder(memo, modelContextLimit, {userId, projectId});
 
-    const agent = createReactAgent({
-        llm: model,
+    const agent = createAgent({
+        model,
         tools: [writeLTMTool, retrieveRelevantLTMTool, transferTool, compressSTMTool],
-        messageModifier: MEMORY_AGENT_SYSTEM,
+        systemPrompt: MEMORY_AGENT_SYSTEM,
     });
 
     async function invokeMemoryAgent(userInput: string) {
@@ -49,7 +49,35 @@ export async function createMemoryAgent({
         return aiResponse;
     }
 
+    async function streamMemoryAgentResult(userInput: string, streamConfig: any) {
+        const [contextRetriever, _] = await Promise.all([
+            contextBuilder.assemble(userInput, {}),
+            memo.logInteraction("User", userInput, new Date()),
+        ]);
+
+        let fullContent = "";
+        for await (const chunk of await agent.stream(
+            {messages: [{role: "user", content: contextRetriever?.prompt}]},
+            {streamMode: "updates"}
+        )) {
+            const updates = (chunk as any)?.tools?.messages;
+            const req = (chunk as any)?.model_request?.messages;
+            if(updates && updates.length > 0){
+                if(updates[0].name === "retrieve_relevant_ltm" || updates[0].name === "transferTool"){
+                    fullContent += '<think>' + updates[0].content + '</think>';
+                    streamConfig?.writer?.({
+                        manager_name: "memoryManager",
+                        content: '<think>' + updates[0].content + '</think>'
+                    });
+                }
+            }
+        }
+        await memo.logInteraction("Coder-Agent", fullContent, new Date());
+        return {fullContent, coderAgentContext: contextRetriever?.coderAgentContextLayers};
+    }
+
     return {
         invokeMemoryAgent,
+        streamMemoryAgentResult
     };
 }

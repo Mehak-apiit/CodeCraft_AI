@@ -1,0 +1,20 @@
+[
+  {
+    "id": "70760ebb-0d12-44fb-92b3-bf6333d84b03",
+    "task": "Test task 1",
+    "assigned_to": "coder",
+    "status": "pending",
+    "dependencies": [],
+    "created_at": "2026-07-11T13:30:25.111Z",
+    "updated_at": "2026-07-11T13:30:25.111Z"
+  },
+  {
+    "id": "80295c09-a94f-44e7-9cfd-a7fe9fedb100",
+    "task": "Test task 2",
+    "assigned_to": "reviewer",
+    "status": "in_progress",
+    "dependencies": [],
+    "created_at": "2026-07-11T13:30:25.111Z",
+    "updated_at": "2026-07-11T13:30:25.111Z"
+  }
+]

@@ -1,15 +1,14 @@
 import { tool } from "@langchain/core/tools";
 import { z } from "zod";
-import { glob } from "glob";
 import fs from "fs/promises";
 import path from "path";
 import { WORKING_DIR } from "./fileSystem";
-import { embedFilesWithAST } from "../rag/embedding";
-import { queryMultiVector } from "../rag/retrieval";
 
 export const embedCodebaseTool = tool(
     async ({ file_pattern, userId, projectId }) => {
         try {
+            const { glob } = await import("glob");
+            const { embedFilesWithAST } = await import("../rag/embedding");
             const pattern = file_pattern ?? "**/*.{js,ts,jsx,tsx}";
             const allFiles = await glob(pattern, {
                 cwd: WORKING_DIR,
@@ -78,6 +77,7 @@ export const embedCodebaseTool = tool(
 export const queryCodebaseTool = tool(
     async ({ query, userId, projectId, k_parents, k_children }) => {
         try {
+            const { queryMultiVector } = await import("../rag/retrieval");
             const { retrievedDocs, childMatches } = await queryMultiVector({
                 userId,
                 projectId,

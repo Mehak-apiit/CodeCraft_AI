@@ -1,7 +1,6 @@
 import { Document } from "@langchain/core/documents";
 import { memoryStore, UserData } from "./memoryStore";
 import { compressSTMTool } from "../tools/compressSTMTool";
-import { docEmbeddingMultiVector } from "../retriever/multivector-retriever";
 import { estimateTokens } from "../helper/estimateTokens";
 
 export class ContextBuilder {
@@ -20,14 +19,18 @@ export class ContextBuilder {
         const userProfile = await this.memory.readMemoryFiles(`MEMORY-${this.userData.userId}.md`);
         const todayLog = await this.memory.readToday(new Date());
 
-        const contextLayers = [
+        const memoryAgentContextLayers = [
             `# System Layer\n${systemPrompt}`,
             `# Profile Layer\n${userProfile}`,
             `# Recent STM Layer\n${todayLog}`,
         ];
+        const coderAgentContextLayers = [
+            `# Profile Layer\n${userProfile}`,
+            `# Recent STM Layer\n${todayLog}`
+        ].join("\n\n");
 
-        const context = contextLayers.join("\n\n");
-        const finalPrompt = `${context}\n\n# New Input\n${userQuery}`;
+        const memorycontext = memoryAgentContextLayers.join("\n\n");
+        const finalPrompt = `${memorycontext}\n\n# New Input\n${userQuery}`;
         const numberOfTokens = estimateTokens(finalPrompt);
 
         if (numberOfTokens > this.modelContextLimit) {
@@ -44,10 +47,13 @@ export class ContextBuilder {
             });
 
             await Promise.all([
-                docEmbeddingMultiVector({
-                    userId: this.userData.userId,
-                    allDocs: [docToEmbed],
-                }),
+                (async () => {
+                    const { docEmbeddingMultiVector } = await import("../retriever/multivector-retriever");
+                    return docEmbeddingMultiVector({
+                        userId: this.userData.userId,
+                        allDocs: [docToEmbed],
+                    });
+                })(),
                 this.memory.emptyAFileContent(),
             ]);
             console.log("========finish embedding =======");
@@ -55,6 +61,7 @@ export class ContextBuilder {
 
         return {
             prompt: finalPrompt,
+            coderAgentContextLayers,
             diagnostics: {
                 estimatedTokens: numberOfTokens,
             },

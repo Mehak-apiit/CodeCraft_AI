@@ -1,0 +1,11 @@
+[
+  {
+    "id": "b6a408fc-83ba-4ce1-8bf4-bb515116617c",
+    "task": "test memory agent",
+    "assigned_to": "agent",
+    "status": "pending",
+    "dependencies": [],
+    "created_at": "2026-07-10T14:04:33.781Z",
+    "updated_at": "2026-07-10T14:04:33.781Z"
+  }
+]

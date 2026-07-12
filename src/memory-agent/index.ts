@@ -5,12 +5,13 @@ import { memoryStore } from "./memo/memoryStore";
 import { ContextBuilder } from "./memo/contextBuilder";
 import { retrieveRelevantLTMTool } from "./tools/hybrid-search";
 import { transferTool } from "./tools/transferTool";
-import { writeLTMTool } from "./tools/writeLTMTool";
+import { getWriteLTMTool } from "./tools/writeLTMTool";
 import { compressSTMTool } from "./tools/compressSTMTool";
 import { MEMORY_AGENT_SYSTEM } from "./prompt/memory-prompt";
+import { MEMORY_DIR } from "../config/paths";
 
 export async function createMemoryAgent({
-    memoryRoot = path.resolve(process.cwd(), "public", "memory"),
+    memoryRoot = MEMORY_DIR,
     model,
     modelContextLimit = 8000,
     userId = "",
@@ -28,7 +29,7 @@ export async function createMemoryAgent({
 
     const agent = createAgent({
         model,
-        tools: [writeLTMTool, retrieveRelevantLTMTool, transferTool, compressSTMTool],
+        tools: [getWriteLTMTool(memoryRoot, {userId, projectId}), retrieveRelevantLTMTool, transferTool, compressSTMTool],
         systemPrompt: MEMORY_AGENT_SYSTEM,
     });
 

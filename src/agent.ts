@@ -1,7 +1,6 @@
 import 'dotenv/config';
 import { ChatCohere } from '@langchain/cohere';
 import { MemorySaver } from '@langchain/langgraph-checkpoint';
-import { createReactAgent } from '@langchain/langgraph/dist/prebuilt';
 import { BaseMessage } from '@langchain/core/messages';
 
 import { bashTool } from './tools/bash';
@@ -73,18 +72,23 @@ const model = new ChatCohere({
 
 const memory = new MemorySaver();
 
-export const agent = createReactAgent({
-  llm: model,
-  tools: allTools,
-  checkpointSaver: memory,
-  messageModifier:
-    'You are a helpful AI coding assistant called CodeCraft AI. ' +
-    'You have access to tools for reading/writing files, running shell commands, ' +
-    'managing git, analyzing code structure, building import graphs, ' +
-    'managing tasks/todos, and working with a RAG-based code index. ' +
-    'Always explain what you are doing before taking action. ' +
-    'Prefer reading files before editing them to understand context.',
-});
+function createAgent() {
+  const { createReactAgent } = require('@langchain/langgraph/prebuilt');
+  return createReactAgent({
+    llm: model,
+    tools: allTools,
+    checkpointSaver: memory,
+    messageModifier:
+      'You are a helpful AI coding assistant called CodeCraft AI. ' +
+      'You have access to tools for reading/writing files, running shell commands, ' +
+      'managing git, analyzing code structure, building import graphs, ' +
+      'managing tasks/todos, and working with a RAG-based code index. ' +
+      'Always explain what you are doing before taking action. ' +
+      'Prefer reading files before editing them to understand context.',
+  });
+}
+
+const agent = createAgent();
 
 async function main() {
   const readline = await import('readline');

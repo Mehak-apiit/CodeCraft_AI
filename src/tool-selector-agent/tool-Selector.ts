@@ -12,7 +12,7 @@ import {
     HumanMessage,
 } from "@langchain/core/messages";
 import z from "zod";
-import { LLM } from "@/llm/llm";
+import { LLM } from "../llm/llm";
 
 export async function toolSelector(llm:any, input:string){
     const toolNames = z.object({

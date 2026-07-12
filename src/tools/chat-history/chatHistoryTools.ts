@@ -2,9 +2,8 @@ import fs from "fs";
 import path from "path";
 import {tool} from "@langchain/core/tools";
 import {z} from "zod";
+import { CHAT_HISTORY_DIR } from "../../config/paths";
 
-const ROOT = process.cwd();
-const CHAT_HISTORY_DIR = path.join(ROOT,"public","chat-history");
 if(!fs.existsSync(CHAT_HISTORY_DIR)){
     fs.mkdirSync(CHAT_HISTORY_DIR,{recursive:true});
 }

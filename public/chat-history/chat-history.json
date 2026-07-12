@@ -1,0 +1,140 @@
+[
+  {
+    "role": "user",
+    "userId": "test",
+    "projectId": "test",
+    "content": "test message"
+  },
+  {
+    "role": "user",
+    "userId": "test123",
+    "projectId": "proj123",
+    "content": "list the files in the current directory"
+  },
+  {
+    "role": "user",
+    "userId": "test123",
+    "projectId": "proj123",
+    "content": "list the files in the current directory"
+  },
+  {
+    "role": "user",
+    "userId": "test123",
+    "projectId": "proj123",
+    "content": "list the files in the current directory"
+  },
+  {
+    "role": "ai",
+    "userId": "test123",
+    "projectId": "proj123",
+    "content": "Here are the files in the current directory:\n\n- .agent/\n- .agent-todos/\n- sample.ts"
+  },
+  {
+    "role": "user",
+    "userId": "test123",
+    "projectId": "proj123",
+    "content": "list the files in the current directory"
+  },
+  {
+    "role": "ai",
+    "userId": "test123",
+    "projectId": "proj123",
+    "content": "Here are the files in the current directory:\n\n- .agent/\n- .agent-todos/\n- sample.ts"
+  },
+  {
+    "role": "user",
+    "userId": "test123",
+    "projectId": "proj123",
+    "content": "read the file src/llm/llm.ts"
+  },
+  {
+    "role": "ai",
+    "userId": "test123",
+    "projectId": "proj123",
+    "content": "I'm sorry, I couldn't find the file src/llm/llm.ts."
+  },
+  {
+    "role": "user",
+    "userId": "test123",
+    "projectId": "proj123",
+    "content": "create a file called hello.txt with the content Hello World"
+  },
+  {
+    "role": "ai",
+    "userId": "test123",
+    "projectId": "proj123",
+    "content": "The file hello.txt has been created with the content \"Hello World\"."
+  },
+  {
+    "role": "user",
+    "userId": "test123",
+    "projectId": "proj123",
+    "content": "what tools do you have available?"
+  },
+  {
+    "role": "ai",
+    "userId": "test123",
+    "projectId": "proj123",
+    "content": "I have the following tools available:\n\n- read_file: Read the contents of a file with line numbers. Optionally read a specific line range.\n- write_file: Create a new file or fully overwrite an existing one. For targeted edits, use edit_file instead.\n- edit_file: Surgically edit a file by replacing a unique string (old_str) with new content. old_str must appear exactly once. Always read_file before editing so you have the exact content.\n- file_tree: Get a full recursive file tree of the project. Excludes node_modules, .git, dist. Use this at the start of every session to understand the project layout.\n- ls: List files and directories at a given path.\n- search_file: Search for a string or regex pattern across files (like grep). Returns matching lines.\n- bash: Safe cross-platform shell tool running inside sandbox directory. Used for npm, git, build commands.\n- build_import_graph: Builds a full bidirectional import dependency graph for JS/TS files.\n- query_import_graph: Query a specific file in the import graph to see its dependencies and dependents.\n- impact_analysis: Find all files affected by a change in a given file.\n- read_agent_index: Read project memory index.\n- update_agent_index: Update index sections.\n- read_agent_module: Read module memory.\n- write_agent_module: Write module memory.\n- list_agent_modules: List modules.\n- read_embeddings_index: Check embedded files.\n- embed_codebase: Embed codebase files using AST-aware chunking. Each chunk is a complete function, class, or type. Check read_embeddings_index first to avoid re-embedding.\n- query_codebase: Semantic search over embedded code. Returns complete AST chunks.\n- ast_analyze: Advanced AST tool for deep code understanding, navigation, and dependency analysis.\n- git_diff: Show git diff for the project. Can show staged changes, compare commits/branches, or diff a specific file.\n- git_log: Show recent git commit history with hash, date, author, and message.\n- git_status: Show current git status: staged, modified, untracked, and conflicted files.\n- write_todos: Creates a structured TODO list for a workflow. Each task gets a UUID, timestamps, and status.\n- read_todos: Read a workflow TODO list.\n- update_todos: Updates tasks in a workflow TODO list by their UUID. Only include fields that need to change.\n- get_next_runnable_tasks: Get pending tasks whose dependencies are all completed.\n- think_tool: A scratchpad to reason before acting on code. Free and instant - no external calls. Use it to reflect on your actions and decisions."
+  },
+  {
+    "role": "user",
+    "userId": "test123",
+    "projectId": "proj123",
+    "content": "read the file src/app.js"
+  },
+  {
+    "role": "ai",
+    "userId": "test123",
+    "projectId": "proj123",
+    "content": "Here is the content of the file src/app.js:\n\n```\nfunction hello() { return 'world'; }\n```"
+  },
+  {
+    "role": "user",
+    "userId": "test123",
+    "projectId": "proj123",
+    "content": "create a new file called greet.js with a function that takes a name and returns hello + name"
+  },
+  {
+    "role": "ai",
+    "userId": "test123",
+    "projectId": "proj123",
+    "content": "The file `greet.js` has been created with the following content:\n\n```javascript\nfunction greet(name) {\n    return 'hello ' + name;\n}\n```"
+  },
+  {
+    "role": "user",
+    "userId": "test123",
+    "projectId": "proj123",
+    "content": "run the command: dir src"
+  },
+  {
+    "role": "ai",
+    "userId": "test123",
+    "projectId": "proj123",
+    "content": "The command `dir src` failed with the following error:\n\n```\n❌ Command failed: dir src\nFile Not Found\n\nSTDOUT:\n Volume in drive C has no label.\n Volume Serial Number is F8F4-E347\n\n Directory of C:\\Users\\Hp\\Desktop\\codecraftai\\sandbox\n\n\nSTDERR:\nFile Not Found\n```\n\nIt seems that the `src` directory does not exist in the current context. You might want to verify the directory structure or use a different command to list the contents. \n\nIf you're working on a Unix-based system, you can use the `ls` command instead:\n\n```bash\nls src\n```\n\nOr, if you're using the `file_tree` tool, you can list the contents of the entire project directory."
+  },
+  {
+    "role": "user",
+    "userId": "test123",
+    "projectId": "proj123",
+    "content": "analyze the structure of src/app.js using AST"
+  },
+  {
+    "role": "ai",
+    "userId": "test123",
+    "projectId": "proj123",
+    "content": "I was unable to analyze the structure of `src/app.js` using AST because the file does not exist. Please ensure the file path is correct and try again."
+  },
+  {
+    "role": "user",
+    "userId": "test",
+    "projectId": "test",
+    "content": "test message"
+  },
+  {
+    "role": "user",
+    "userId": "test",
+    "projectId": "test",
+    "content": "test message"
+  }
+]

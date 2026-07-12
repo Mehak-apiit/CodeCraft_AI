@@ -1,0 +1,11 @@
+[
+  {
+    "id": "a8f8b5f8-83e6-4074-a654-f878c608427c",
+    "task": "Test task 1",
+    "assigned_to": "coder",
+    "status": "pending",
+    "dependencies": [],
+    "created_at": "2026-07-12T13:29:19.974Z",
+    "updated_at": "2026-07-12T13:29:19.974Z"
+  }
+]

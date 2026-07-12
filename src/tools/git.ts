@@ -2,16 +2,20 @@ import { tool } from "@langchain/core/tools";
 import { z } from "zod";
 import simpleGit from "simple-git";
 import path from "path";
+import fs from "fs";
+import { WORKSPACE_ROOT } from "../config/paths";
 
-const GIT_REPO = "human-in-loop";
-const WORKING_DIR = path.resolve(
-  process.cwd(),
-  "public/working-dir/",
-  GIT_REPO
-);
+const WORKING_DIR = WORKSPACE_ROOT;
 
 function getGit() {
   return simpleGit(WORKING_DIR);
+}
+
+async function ensureGitRepo() {
+  const gitDir = path.join(WORKING_DIR, ".git");
+  if (!fs.existsSync(gitDir)) {
+    await simpleGit(WORKING_DIR).init();
+  }
 }
 
 async function assertGitRepo(git: any) {
@@ -26,6 +30,7 @@ async function assertGitRepo(git: any) {
 export const gitDiffTool = tool(
   async ({ target, staged, file_path }) => {
     try {
+      await ensureGitRepo();
       const git = getGit();
       await assertGitRepo(git);
 
@@ -72,6 +77,7 @@ export const gitDiffTool = tool(
 export const gitLogTool = tool(
   async ({ limit, author, since }) => {
     try {
+      await ensureGitRepo();
       const git = getGit();
       await assertGitRepo(git);
 
@@ -118,6 +124,7 @@ export const gitLogTool = tool(
 export const gitStatusTool = tool(
   async () => {
     try {
+      await ensureGitRepo();
       const git = getGit();
       await assertGitRepo(git);
 

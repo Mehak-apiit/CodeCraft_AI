@@ -2,8 +2,9 @@ import { tool } from "@langchain/core/tools";
 import { z } from "zod";
 import fs from "fs/promises";
 import path from "path";
+import { WORKSPACE_ROOT } from "../config/paths";
 
-export const WORKING_DIR = path.resolve(process.cwd(), "public/agent-working-dir");
+export const WORKING_DIR = WORKSPACE_ROOT;
 
 const IGNORE_DIRS = new Set([
     "node_modules", ".git", "dist", "build", ".next",

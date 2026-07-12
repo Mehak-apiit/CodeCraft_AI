@@ -4,18 +4,18 @@ import {
     StateGraph,
     Annotation,
     MessagesAnnotation,
-    Command
+    Command,
+    MemorySaver
 } from "@langchain/langgraph";
-import {LLM} from "@/llm/llm";
+import { LLM } from "../llm/llm";
 import path from "path";
-import { memoryStore } from "@/memory-agent/memo/memoryStore";
-import { createMemoryAgent } from "@/memory-agent";
+import { memoryStore } from "../memory-agent/memo/memoryStore";
+import { createMemoryAgent } from "../memory-agent";
 import { AIMessage, HumanMessage } from "@langchain/core/messages";
-import { TOOL_REGISTRY } from "@/tools/toolRegistry";
-import { codeAgent } from "@/coder-agent/coderAgent";
+import { codeAgent } from "../coder-agent/coderAgent";
 
 const llm = LLM.getInstance("cohere");
-const memoryRoot = path.resolve(process.cwd(),"public","memory");
+const memoryRoot = path.resolve(process.cwd(), "public", "memory");
 
 const StateAnnotation = Annotation.Root({
     ...MessagesAnnotation.spec,
@@ -27,30 +27,29 @@ const StateAnnotation = Annotation.Root({
     coderAgentMessage: Annotation<string | null>(),
 });
 
-const memoryAgentNode = async(state:any, config:any)=>{
-    console.log(`=================memoryBuilder====================================`);
-    const {userId, projectId} = state;
+const memoryAgentNode = async (state: any, config: any) => {
+    console.log("=================memoryBuilder====================================");
+    const { userId, projectId } = state;
     const last = state.messages
-        .filter((m:any)=>m._getType()==="human")
+        .filter((m: any) => m._getType() === "human")
         .slice(-1)[0];
-    const {streamMemoryAgentResult} = await createMemoryAgent({model:llm, userId, projectId});
-    const {fullContent, coderAgentContext} = await streamMemoryAgentResult(last?.content, config);
+    const { streamMemoryAgentResult } = await createMemoryAgent({ model: llm, userId, projectId });
+    const { fullContent, coderAgentContext } = await streamMemoryAgentResult(last?.content, config);
     const shouldHandoff = fullContent.includes("__TRANSFER__");
-    if (shouldHandoff){
+    if (shouldHandoff) {
         return new Command({
-            update: {messages: [new AIMessage(fullContent)], coderAgentContext: coderAgentContext},
+            update: { messages: [new AIMessage(fullContent)], coderAgentContext: coderAgentContext },
             goto: "coderAgent",
         });
     }
     return new Command({
-        update: {messages: [new AIMessage(fullContent)], nextNode: END},
+        update: { messages: [new AIMessage(fullContent)], nextNode: END },
         goto: END
     });
 };
 
-const toolSelectorAgentNode = async(state:any, config:any)=>{
-    const cleanMessage = state.coderAgentMessage;
-    const selectedTools:any[] = [];
+const toolSelectorAgentNode = async (state: any, config: any) => {
+    const selectedTools: any[] = [];
     const statusUpdate = new HumanMessage({
         content: `[SYSTEM_NOTIFICATION]: Tool access GRANTED.`
     });
@@ -63,57 +62,56 @@ const toolSelectorAgentNode = async(state:any, config:any)=>{
     });
 };
 
-const coderAgentNode = async(state: any, agentConfig: any)=>{
-    console.log('=================coderAgent====================================');
-    const {userId, projectId} = state;
-    const memo = new memoryStore(memoryRoot, {userId, projectId});
-    const last = state.messages
-        .filter((m:any)=> m._getType() === "human")
-        .slice(-1)[0];
-    const cleanMessages = state.messages.filter((m:any)=>{
+const coderAgentNode = async (state: any, agentConfig: any) => {
+    console.log("=================coderAgent====================================");
+    const { userId, projectId } = state;
+    const memo = new memoryStore(memoryRoot, { userId, projectId });
+    const cleanMessages = state.messages.filter((m: any) => {
         return !m.content?.includes("__TRANSFER__");
     });
-    const inputForCoder = [
-        ...cleanMessages,
-        new HumanMessage(`CURRENT CONTEXT: ${state.coderAgentContext}`)
-    ];
-    const aiMessage = await codeAgent(last?.content, state.selectedTools, agentConfig) as any;
-    await memo.logInteraction("Coder-Agent", aiMessage?.messages?.[aiMessage.messages.length-1]?.content ?? "", new Date());
+    const last = state.messages
+        .filter((m: any) => m._getType() === "human")
+        .slice(-1)[0];
 
-    const content = aiMessage?.messages?.[aiMessage.messages.length-1]?.content ?? "";
-    const shouldHandoff = content.includes("__TRANSFER__");
-    if(shouldHandoff){
+    const result = await codeAgent(last?.content || "", state.selectedTools, { userId, projectId }) as any;
+    const aiResponse = result?.messages?.[result.messages.length - 1]?.content ?? "";
+    await memo.logInteraction("Coder-Agent", aiResponse, new Date());
+
+    const shouldHandoff = aiResponse.includes("__TRANSFER__");
+    if (shouldHandoff) {
         return new Command({
             update: {
-                coderAgentMessage: content,
+                coderAgentMessage: aiResponse,
                 nextNode: "toolSelectorAgent"
             },
             goto: "toolSelectorAgent",
         });
     }
     return new Command({
-        update: {messages: [new AIMessage(content)], nextNode: END},
+        update: { messages: [new AIMessage(aiResponse)], nextNode: END },
         goto: END,
     });
 };
+
+const checkpointer = new MemorySaver();
 
 const workflow = new StateGraph(StateAnnotation)
     .addNode("memoryAgent", memoryAgentNode)
     .addNode("coderAgent", coderAgentNode)
     .addNode("toolSelectorAgent", toolSelectorAgentNode)
     .addEdge(START, "memoryAgent")
-    .addConditionalEdges('memoryAgent', (state)=>{
-        if (state.nextNode === "coderAgent"){
+    .addConditionalEdges('memoryAgent', (state) => {
+        if (state.nextNode === "coderAgent") {
             return "coderAgent";
         }
         return END;
     })
-    .addConditionalEdges('coderAgent', (state)=>{
-        if(state.nextNode === "toolSelectorAgent"){
+    .addConditionalEdges('coderAgent', (state) => {
+        if (state.nextNode === "toolSelectorAgent") {
             return "toolSelectorAgent";
         }
         return END;
     })
     .addEdge("toolSelectorAgent", 'coderAgent');
 
-export const graph = workflow.compile();
+export const graph = workflow.compile({ checkpointer });

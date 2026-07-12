@@ -10,7 +10,7 @@ export const createTaskTool = (model: any, config: any = {}) => {
                 return "Please provide sub_agent name and task that will be executed";
             }
 
-            const { createReactAgent } = require("@langchain/langgraph/dist/prebuilt");
+            const { createReactAgent } = require("@langchain/langgraph/prebuilt");
             const subagent = createReactAgent({
                 llm: model,
                 tools: [...(config.tools || [])],

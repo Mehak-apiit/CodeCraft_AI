@@ -1,16 +1,30 @@
 import mongoose from "mongoose";
-export async function dbConnection(){
-    if (!process.env.DB_URL) {
-        console.log("No DB_URL set, skipping MongoDB connection");
+import { createLogger } from "../../utils/logger";
+import { config } from "../../config";
+
+const logger = createLogger('MongoDB');
+
+export async function dbConnection() {
+    if (!config.mongoUrl) {
+        logger.warn("No DB_URL configured, skipping MongoDB connection");
         return;
     }
+
     try {
-        await mongoose.connect(process.env.DB_URL, {
-            serverSelectionTimeoutMS: 2000,
+        await mongoose.connect(config.mongoUrl, {
+            serverSelectionTimeoutMS: 5000,
         });
-        console.log("MongoDB connected");
-    } catch (err: any) {
-        console.log("MongoDB unavailable, running without database:", err.message);
-        try { await mongoose.disconnect(); } catch {}
+        logger.info("Connected to MongoDB");
+    } catch (error: any) {
+        logger.error("MongoDB connection failed", error);
+        throw error;
     }
 }
+
+mongoose.connection.on('error', (err) => {
+    logger.error('MongoDB connection error', err);
+});
+
+mongoose.connection.on('disconnected', () => {
+    logger.warn('MongoDB disconnected');
+});

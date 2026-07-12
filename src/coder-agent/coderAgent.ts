@@ -1,45 +1,43 @@
-import { HumanMessage } from "@langchain/core/messages";
-import { createAgent } from "langchain";
+import { ChatCohere } from "@langchain/cohere";
 import { MemorySaver } from "@langchain/langgraph-checkpoint";
-import { LLM } from "../llm/llm";
+import { loadAllTools } from "../tools/toolRegistry";
 import { BASE_PROMPT } from "./prompt/system_prompt";
 import "dotenv/config";
-import { transferTool } from "@/memory-agent/tools/transferTool";
-import { thinkTool } from "@/tools/task/thinkTool";
-import { createTaskTool } from "@/tools/task/task";
-
-const subagentConfigs = {
-    tools: [ ]
-}
 
 const memory = new MemorySaver();
 
-export async function codeAgent(userInput: any, selectedTools:any[]=[], agentConfig:Record<string,any>={}){
-    const fixedToolsArray = (Array.isArray(selectedTools) ? selectedTools: []).filter(tool => tool !== undefined)
-    const agent = createAgent({
-        model: LLM.getInstance('cohere'),
-        systemPrompt: `<system>${BASE_PROMPT}</system> \n\n`,
-        tools:[
-            ...fixedToolsArray,
-            transferTool,
-            thinkTool,
-            createTaskTool(LLM.getInstance("cohere"),subagentConfigs),
-        ],
-    } as any);
+function getModel() {
+    return new ChatCohere({
+        model: 'command-a-03-2025',
+        temperature: 0,
+        apiKey: process.env.COHERE_API_KEY,
+    });
+}
+
+export async function codeAgent(
+    userInput: any,
+    selectedTools: any[] = [],
+    agentConfig: Record<string, any> = {}
+) {
+    const allTools = loadAllTools();
+    const { createReactAgent } = require("@langchain/langgraph/prebuilt");
+
+    const agent = createReactAgent({
+        llm: getModel(),
+        tools: allTools,
+        checkpointSaver: memory,
+        messageModifier: BASE_PROMPT,
+    });
+
     const result = await agent.invoke(
         {
             messages: [
-                new HumanMessage(`
-                    Your are collaborating with the tool Selector Agent.
-                    if you need a tool, to do a task call
-                    the transferTool tool to pass control to the tool selectorAgent,
-                    eg: need you to select for me tool_name`),
-                new HumanMessage('your are working on windows computer as environment. Do not use linux command'),
-                new HumanMessage(userInput)
+                { role: 'user', content: userInput }
             ]
         },
         {
-            configurable:{
+            configurable: {
+                thread_id: `coder-${agentConfig.userId}-${agentConfig.projectId}`,
                 projectId: agentConfig.projectId,
                 userId: agentConfig.userId
             }

@@ -2,16 +2,12 @@ import { tool } from "@langchain/core/tools";
 import { z } from "zod";
 import { exec } from "child_process";
 import { promisify } from "util";
-import path from "path";
 import fs from "fs";
+import { WORKSPACE_ROOT } from "../config/paths";
 
 const execAsync = promisify(exec);
 
-/**
- * ✅ FIX: Always use a stable project sandbox folder
- * (NOT just public/working-dir confusion)
- */
-const WORKING_DIR = path.resolve(process.cwd(), "sandbox");
+const WORKING_DIR = WORKSPACE_ROOT;
 
 const MAX_OUTPUT_CHARS = 8000;
 

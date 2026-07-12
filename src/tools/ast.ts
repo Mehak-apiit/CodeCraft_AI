@@ -4,8 +4,9 @@ import { parse } from "@babel/parser";
 import * as t from "@babel/types";
 import fs from "fs/promises";
 import path from "path";
+import { WORKSPACE_ROOT } from "../config/paths";
 
-const PROJECT_ROOT = path.resolve(process.cwd());
+const PROJECT_ROOT = WORKSPACE_ROOT;
 
 function safeProjectPath(filePath: string) {
   const resolved = path.resolve(PROJECT_ROOT, filePath);
